@@ -1,0 +1,21 @@
+[world]
+omega0 = 2.0   # lone pendulum frequency, rad/s
+kappa = 1.0    # spring stiffness / inertia, 1/s^2
+dt = 0.05      # sampling step, s
+d = 1          # position coordinates per body (1 = planar)
+
+[run]
+seeds = [0, 1, 2]
+
+[e0]
+# Small swings: velocity Verlet (nominal) against the exact step (actual).
+# Large swings: Verlet at `substeps` (nominal) against Verlet at `reference_substeps` (actual).
+graph = "path"
+n = 3
+amplitude = 0.1          # rad, small swings
+large_amplitude = 2.0    # rad, large swings (released from rest)
+samples = 2000           # 100 s
+substeps = 50
+reference_substeps = 200
+trajectories = 4
+player_steps = 400

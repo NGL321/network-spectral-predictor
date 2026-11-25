@@ -1,0 +1,42 @@
+{
+ "code": "fb79448",
+ "time_utc": "2026-11-25T20:28:55+00:00",
+ "python": "3.13.18",
+ "numpy": "2.5.3",
+ "scipy": "1.18.1",
+ "config": {
+  "world": {
+   "omega0": 2.0,
+   "kappa": 1.0,
+   "dt": 0.05,
+   "d": 1
+  },
+  "run": {
+   "seeds": [
+    0,
+    1,
+    2
+   ]
+  },
+  "e4": {
+   "graph": "path",
+   "n": 3,
+   "amplitudes": [
+    0.1,
+    0.5,
+    1.0,
+    2.0
+   ],
+   "lifts": [
+    "x",
+    "sin",
+    "sin+cos"
+   ],
+   "train_trajectories": 10,
+   "test_trajectories": 10,
+   "steps": 200,
+   "substeps": 50,
+   "player_amplitude": 2.0
+  }
+ }
+}

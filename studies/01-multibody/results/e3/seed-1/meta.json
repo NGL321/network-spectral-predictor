@@ -1,0 +1,37 @@
+{
+ "code": "fb79448",
+ "time_utc": "2026-11-25T20:28:53+00:00",
+ "python": "3.13.18",
+ "numpy": "2.5.3",
+ "scipy": "1.18.1",
+ "config": {
+  "world": {
+   "omega0": 2.0,
+   "kappa": 1.0,
+   "dt": 0.05,
+   "d": 1
+  },
+  "run": {
+   "seeds": [
+    0,
+    1,
+    2
+   ]
+  },
+  "e3": {
+   "graph": "ring",
+   "n": 5,
+   "seen": 16,
+   "trajectories": 5,
+   "steps": 200,
+   "test_trajectories": 5,
+   "kappas": [
+    1.0,
+    4.0
+   ],
+   "amplitude": 0.1,
+   "switch_step": 100,
+   "switch_edge": 0
+  }
+ }
+}

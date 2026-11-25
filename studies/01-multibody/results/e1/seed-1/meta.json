@@ -1,0 +1,48 @@
+{
+ "code": "fb79448",
+ "time_utc": "2026-11-25T20:28:48+00:00",
+ "python": "3.13.18",
+ "numpy": "2.5.3",
+ "scipy": "1.18.1",
+ "config": {
+  "world": {
+   "omega0": 2.0,
+   "kappa": 1.0,
+   "dt": 0.05,
+   "d": 1
+  },
+  "run": {
+   "seeds": [
+    0,
+    1,
+    2
+   ]
+  },
+  "e1": {
+   "graph": "path",
+   "n": 3,
+   "amplitude": 0.1,
+   "train_trajectories": 10,
+   "train_steps": 200,
+   "test_trajectories": 10,
+   "test_steps": 200,
+   "gd_tolerance": 1e-08,
+   "scarcity_graph": "ring",
+   "scarcity_n": 8,
+   "scarcity_steps": [
+    10,
+    20,
+    50,
+    100,
+    200,
+    500,
+    2000
+   ],
+   "noise": [
+    0.0,
+    0.001,
+    0.01
+   ]
+  }
+ }
+}

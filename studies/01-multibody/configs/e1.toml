@@ -1,0 +1,23 @@
+[world]
+omega0 = 2.0   # lone pendulum frequency, rad/s
+kappa = 1.0    # spring stiffness / inertia, 1/s^2
+dt = 0.05      # sampling step, s
+d = 1          # position coordinates per body (1 = planar)
+
+[run]
+seeds = [0, 1, 2]
+
+[e1]
+graph = "path"
+n = 3
+amplitude = 0.1
+train_trajectories = 10
+train_steps = 200
+test_trajectories = 10
+test_steps = 200
+gd_tolerance = 1e-8
+# data efficiency: nsp (8 numbers) against one global map (256 numbers) on a ring of 8
+scarcity_graph = "ring"
+scarcity_n = 8
+scarcity_steps = [10, 20, 50, 100, 200, 500, 2000]
+noise = [0.0, 0.001, 0.01]

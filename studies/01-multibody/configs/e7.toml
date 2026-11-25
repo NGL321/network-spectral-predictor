@@ -1,0 +1,30 @@
+[world]
+omega0 = 2.0   # lone pendulum frequency, rad/s
+kappa = 1.0    # spring stiffness / inertia, 1/s^2
+dt = 0.05      # sampling step, s
+d = 1          # position coordinates per body (1 = planar)
+
+[run]
+seeds = [0, 1, 2]
+
+[e7]
+graph = "ring"
+n = 8
+amplitude = 0.1
+noise = 0.01
+switch_every = 50          # steps between rewirings (2.5 s)
+total_steps = 600          # 30 s: 12 wirings per run
+switch_kind = "pattern"    # "pattern": a fresh random wiring; "toggle": one spring flips
+trials = 20                # runs per seed
+horizon = 20               # how far ahead the nominal world predicts (steps; 20 = 1 s)
+windows = [20, 50]         # sliding-detection windows (steps)
+train_sizes = [3, 5]       # the model is learned on these body counts only (as in E2)
+train_graphs = ["path", "ring"]
+train_patterns = 3
+train_trajectories = 10
+train_steps = 200
+calibration_steps = 2000   # noisy ring-of-5 run with known gates, for the residual scale
+sweep_every = [20, 50, 100]
+sweep_noise = [0.01, 0.05]
+sweep_kinds = ["pattern", "toggle"]
+sweep_trials = 10

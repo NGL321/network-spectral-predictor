@@ -1,0 +1,51 @@
+{
+ "code": "fb79448",
+ "time_utc": "2026-11-25T20:29:01+00:00",
+ "python": "3.13.18",
+ "numpy": "2.5.3",
+ "scipy": "1.18.1",
+ "config": {
+  "world": {
+   "omega0": 2.0,
+   "kappa": 1.0,
+   "dt": 0.05,
+   "d": 1
+  },
+  "run": {
+   "seeds": [
+    0,
+    1,
+    2
+   ]
+  },
+  "e6": {
+   "graph": "ring",
+   "n": 5,
+   "bank_size": 16,
+   "hazard": 0.01,
+   "noise": 0.01,
+   "amplitude": 0.1,
+   "windows": [
+    1,
+    2,
+    3,
+    5,
+    10,
+    20,
+    50
+   ],
+   "static_trials": 100,
+   "switch_trials": 20,
+   "switch_step": 150,
+   "total_steps": 300,
+   "sliding_window": 50,
+   "novelty_windows": [
+    20,
+    50,
+    100
+   ],
+   "novelty_trials": 150,
+   "false_alarm": 0.01
+  }
+ }
+}
