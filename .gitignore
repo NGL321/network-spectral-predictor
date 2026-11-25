@@ -1,0 +1,12 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ipynb_checkpoints/
+build/
+dist/
+.venv/
+.DS_Store
+notebooks/html/
+studies/*/notebooks/html/
+node_modules/

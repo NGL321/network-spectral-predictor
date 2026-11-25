@@ -1,0 +1,20 @@
+[world]
+omega0 = 2.0   # lone pendulum frequency, rad/s
+kappa = 1.0    # spring stiffness / inertia, 1/s^2
+dt = 0.05      # sampling step, s
+d = 1          # position coordinates per body (1 = planar)
+
+[run]
+seeds = [0, 1, 2]
+
+[e5]
+graph = "ring"
+n = 5
+kappas = [1.0, 16.0]
+windows = [10, 50, 200]
+noise = [0.0, 0.01, 0.05]
+trajectories = [1, 3]
+methods = ["lstsq", "nnls"]
+trials = 40
+amplitude = 0.1
+p_on = 0.5
