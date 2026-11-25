@@ -37,7 +37,7 @@ SRC = ROOT / "src" / "nsp"
 OUT = ROOT / "notebooks"
 sys.path.insert(0, str(ROOT / "src"))
 
-from nsp import detect, fit, graphs, model, viz, world as W  # noqa: E402
+from nsp import detect, fit, graphs, model, sense, viz, world as W  # noqa: E402
 from nsp.results import git_version  # noqa: E402
 
 WORLD = W.World()
@@ -110,6 +110,11 @@ TEST_NOTES = {
     "test_recall_and_relock": "the binding vertex recalls a stored structure and re-locks after a switch (Part 10)",
     "test_design_steps_stack_into_the_window_design": "per-step detection blocks stack into the window's design (Part 9, E7)",
     "test_transition_priors": "the uniform and one-flip priors over wiring changes are proper transition matrices (Part 10)",
+    "test_relaxation_settles_on_the_clamp": "gradient descent on a body's energy ends at the clamped estimate (Part 12)",
+    "test_mode_radius_matches_the_whole_error_map": "the clamp's per-mode spectral radius equals the whole network's (Part 12)",
+    "test_delay_line_is_exact_on_clean_data": "two readings determine the state when the model is the world (Part 12)",
+    "test_clamped_filter_and_kalman_converge_on_clean_data": "the clamped sense and the Kalman filter converge (Part 12)",
+    "test_growing_precision_settles_on_the_steady_gain_and_converges_fast": "growing precision ends at the steady gain, and converges faster from a cold start (Part 12)",
 }
 
 
@@ -327,7 +332,19 @@ def numbers() -> dict:
         kbare_pct=viz.pct(1 - rec["kappa_bare"], 2),
         swing2=f"{W.swing_frequency(w, 2.0) / w.omega0:.3f}",
         swing2_pct=viz.pct(1 - W.swing_frequency(w, 2.0) / w.omega0, 2),
+        **_sense_numbers(w, s),
     )
+
+
+def _sense_numbers(w, s) -> dict:
+    """Part 12's worked example: s = 1% of a 0.1 rad swing, q = 1e-8 (rad/s)^2 per step."""
+    sd, q = 0.01 * 0.1, 1e-8
+    k, _ = sense.lone_gain(s.K, sd**2, q)
+    rho = float(sense.mode_radius(s, k, [0.0])[0])
+    return dict(kq=bmat(k[None], 4), kth=f"{k[0]:.4f}", rho=f"{rho:.4f}", sqrt1k=f"{np.sqrt(1 - k[0]):.4f}",
+                halving=f"{sense.halving_steps(rho):.1f}", dline=f"{np.sqrt(2) * sd / w.dt:.4f}",
+                dline_pct=viz.pct(np.sqrt(2) * sd / w.dt / (0.1 * w.omega0), 2),
+                rho4=f"{float(sense.mode_radius(s, k, [4.0])[0]):.4f}")
 
 
 def cells(N: dict, version: str, today: str) -> list:
@@ -340,7 +357,7 @@ def cells(N: dict, version: str, today: str) -> list:
 
 > **This notebook runs no Python, and it is not a source of truth.** Every code block is copied verbatim from `src/nsp` when the notebook is built, and every number in a worked example is computed by the library at that moment, so neither can drift from the code. The prose and the equations are hand-written: they explain the code, they do not define it. Where they disagree, the code and its tests win (the tests are listed at the end).
 
-**How to read it.** Each part opens with one plain sentence, then the equations with every symbol defined, then a worked example, then the code that implements it. Parts 1 to 5 are the core (the world, the model, and what the model can and cannot represent); 6 and 7 are learning and measuring; 8 to 11 follow the experiments (large swings, detecting springs, recall, two angles).
+**How to read it.** Each part opens with one plain sentence, then the equations with every symbol defined, then a worked example, then the code that implements it. Parts 1 to 5 are the core (the world, the model, and what the model can and cannot represent); 6 and 7 are learning and measuring; 8 to 11 follow the experiments (large swings, detecting springs, recall, two angles); 12 opens step 2, where only angles are measured.
 
 | Part | Topic | Experiments |
 | --- | --- | --- |
@@ -355,7 +372,8 @@ def cells(N: dict, version: str, today: str) -> list:
 | 8 | Large swings | E4 |
 | 9 | Detecting the springs | E5 |
 | 10 | Recall: structural and binding vertices | E6 |
-| 11 | Preview of stage 1.5: two angles per body | stage 1.5 |""", today=today, version=version)))
+| 11 | Preview of stage 1.5: two angles per body | stage 1.5 |
+| 12 | Hidden information: a clamped sense | step 2, H1 |""", today=today, version=version)))
 
     out.append(md(r"""## Notation
 
@@ -656,6 +674,35 @@ For large swings the lift must treat every direction alike, so it uses only rota
 
 """ + code("model", "OneHop.per_direction") + "\n\n" + code("fit", "fit_kronecker") + "\n\n" +
         code("lifts", "invariant_features")))
+
+    # ---- Part 12
+    out.append(md(fill(r"""## 12 · Hidden information: a clamped sense (step 2)
+
+*In one sentence:* when only angles are measured, each body predicts with step 1's maps and corrects itself through its clamped angle; that correction is where predictive-coding relaxation settles, and its stability splits per graph frequency.
+
+Each body senses its angle with noise of standard deviation $s$; its rate is never measured:
+
+$$\underbrace{y_v(t)}_{\text{clamped sense}}=\underbrace{c}_{[1,\;0]}\,x_v(t)+\varepsilon_v(t),\qquad\varepsilon_v\sim\mathcal N(0,s^2)$$
+
+**The delay line** reads the rate off two readings, $\hat{\dot\theta}(t-1)=A_{\theta\dot\theta}^{-1}\big(y(t)-A_{\theta\theta}y(t-1)\big)\approx\big(y(t)-y(t-1)\big)/\Delta t$, so its rate noise is about $\sqrt2\,s/\Delta t$ at every step.
+
+**The clamped sense.** Each body predicts, $\hat x^-_v=K\hat x_v-M\sum_u g_{uv}(\hat x_v-\hat x_u)$, then relaxes on an energy that weighs its sense against its prediction:
+
+$$E_v(x)=\underbrace{\frac{(y_v-c\,x)^2}{2s^2}}_{\text{sense error}}+\underbrace{\tfrac12(x-\hat x^-_v)^{\top}\,\Pi^{-1}(x-\hat x^-_v)}_{\text{prediction error}}\quad\Longrightarrow\quad\hat x_v=\hat x^-_v+\underbrace{\frac{\Pi c^\top}{c\,\Pi c^\top+s^2}}_{k}\big(y_v-c\,\hat x^-_v\big)$$
+
+$\Pi$ is the prior covariance: fixed at the lone body's steady state (from the Riccati equation, given $q$, the rate variance per step the body allows for unmodelled forces), or growing from a cold start through each body's own $2\times2$ Riccati recursion. Neither shares covariance between bodies.
+
+**Stability per graph frequency.** The error obeys $e(t)=\big(I-(I_n\otimes k)C\big)P\,e(t-1)$, which splits by the spectrum identity into one block $(I-kc)(K-\lambda M)$ per graph frequency. When that block's eigenvalues are a complex pair, $|\mu|^2=\det$, so
+
+$$\rho=\sqrt{(1-k_\theta)\,\det(K-\lambda M)}\approx\sqrt{1-k_\theta}\qquad(\det(K-\lambda M)\approx1\text{: the step nearly preserves area})$$
+
+and every graph mode converges at the rate the angle gain sets.
+
+**Why learning (H2) needs care.** With only $\theta$ sensed, $K\to TKT^{-1}$, $M\to TMT^{-1}$ with $T=\begin{bmatrix}1&0\\ \alpha&\beta\end{bmatrix}$ predicts the same angles, so the learned hidden coordinate can be any mix $\alpha\theta+\beta\dot\theta$; physics has to be read from eigenvalues, which do not change.
+
+**Worked example** ($s$ = 1% of a 0.1 rad swing, $q=10^{-8}$): the steady gain is $k=<<kq>>^{\top}$, so $\rho=<<rho>>$ at $\lambda=0$ and $<<rho4>>$ at $\lambda=4$, against $\sqrt{1-k_\theta}=<<sqrt1k>>$: the error halves every <<halving>> steps. The delay line's rate noise is $\sqrt2\,s/\Delta t=<<dline>>$ rad/s, <<dline_pct>> of the rate scale $a\,\omega_0$.
+
+""", **N) + code("sense", "observe", "lone_gain", "lone_gains", "relax", "clamped_filter", "delay_line", "mode_radius")))
 
     # ---- tests
     out.append(md(r"""## Where the truth lives: the tests
