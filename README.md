@@ -19,7 +19,12 @@ studies/01-multibody/     step 1: pendulums on springs
     figures.py            the study's figures
     build_notebooks.py    builds, executes and exports the presentation notebooks
     notebooks/            e0_calibrate ... e7_capstone, executed
+studies/02-hidden/        step 2: hidden information; only angles are measured, each body's sense is clamped
+    configs/, experiments/, results/, figures.py, build_notebooks.py
+    notebooks/            h1_clamped, executed
 ```
+
+`nsp.study` holds the plumbing a study folder needs (configs, results, ledgers, logs, building the notebooks). Study 02 uses it; study 01 predates it and keeps its own copy.
 
 ## Running
 
@@ -30,6 +35,8 @@ cd studies/01-multibody
 python experiments/run_all.py                       # every experiment and seed (or a subset: run_all.py e2 e5)
 python build_notebooks.py --execute --html          # build, run and export the eight notebooks
 python ../../tools/build_math_notebook.py --html    # rebuild the math walkthrough after changing the library
+cd ../02-hidden
+python experiments/run_all.py && python build_notebooks.py --execute --html
 ```
 
 A notebook whose results are missing runs its experiment first, so `build_notebooks.py --execute` also works from a clean checkout.
