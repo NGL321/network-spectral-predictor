@@ -17,7 +17,7 @@ from nsp import config
 
 HERE = Path(__file__).resolve().parent
 EXPERIMENTS = {"e0": "e0_calibrate", "e1": "e1_decompose", "e2": "e2_transfer", "e3": "e3_reconfigure",
-               "e4": "e4_large_swings", "e5": "e5_detect", "e6": "e6_recall"}
+               "e4": "e4_large_swings", "e5": "e5_detect", "e6": "e6_recall", "e7": "e7_capstone"}
 
 
 def _run(name: str, seed: int) -> str:

@@ -20,7 +20,7 @@ from nsp.results import load_runs
 STUDY = Path(__file__).resolve().parent
 RESULTS = STUDY / "results"
 SCRIPTS = {"e0": "e0_calibrate", "e1": "e1_decompose", "e2": "e2_transfer", "e3": "e3_reconfigure",
-           "e4": "e4_large_swings", "e5": "e5_detect", "e6": "e6_recall"}
+           "e4": "e4_large_swings", "e5": "e5_detect", "e6": "e6_recall", "e7": "e7_capstone"}
 C = viz.COLORS
 
 DESCRIBE = {
@@ -47,6 +47,10 @@ DESCRIBE = {
     "static_trials": "trials per window", "switch_trials": "switch trials", "total_steps": "steps per switch trial",
     "sliding_window": "window of the sliding detector (steps)", "novelty_windows": "novelty test windows (steps)",
     "novelty_trials": "novelty trials per window", "false_alarm": "false-alarm rate the novelty threshold allows",
+    "switch_every": "steps between rewirings", "switch_kind": "how the wiring changes: a fresh pattern, or one spring",
+    "horizon": "how far ahead the nominal world predicts (steps)", "calibration_steps": "steps of the noise calibration run",
+    "sweep_every": "rewiring intervals swept (steps)", "sweep_noise": "noise levels swept",
+    "sweep_kinds": "kinds of rewiring swept", "sweep_trials": "runs per swept condition and seed",
 }
 
 
@@ -608,4 +612,198 @@ def e6_novelty(runs: list[dict], window: int = 20):
     axes[1].legend(loc="upper right")
     fig.suptitle(f"Is this structure new? Window of {window} steps", x=0.01, ha="left", fontsize=13,
                  fontweight="bold")
+    return fig
+
+
+# ------------------------------------------------------------------------------------------------------------- E7
+
+E7_STYLE = {"known": (C["actual"], "-", "known gates"), "recall": (C["nominal"], "-", "binding vertex (recall)"),
+            "recall-flip": ("#56B4E9", "--", "binding vertex, one-flip prior"),
+            "detect-20": (C["out"], "-", "detection, 20-step window"), "detect-50": (C["near"], "--", "detection, 50-step window"),
+            "stale": (C["muted"], ":", "first wiring, never updated")}
+
+
+def _ring_glyph(ax, x0, y0, g, r=0.36, on=None, off=None, lw=1.1):
+    ang = np.pi / 2 - 2 * np.pi * np.arange(8) / 8
+    px, py = x0 + r * np.cos(ang), y0 + r * np.sin(ang)
+    for e in range(8):
+        u, v = e, (e + 1) % 8
+        ax.plot([px[u], px[v]], [py[u], py[v]], color=on if g[e] > 0.5 else off, lw=lw if g[e] > 0.5 else 0.6,
+                solid_capstyle="round")
+    ax.scatter(px, py, s=3, color=C["actual"], zorder=3)
+
+
+def e7_bank(run: dict):
+    a = run["arrays"]
+    pats, seq = a["bank_patterns"], list(a["seq"])
+    fig, ax = plt.subplots(figsize=(11, 3.25))
+    for c, g in enumerate(pats):
+        col, row = c % 32, c // 32
+        visited = c in seq
+        _ring_glyph(ax, col, -row, g, on=C["nominal"] if visited else C["spring"], off="#E6E8EB",
+                    lw=1.6 if visited else 1.0)
+        if visited:
+            for k in [i for i, s in enumerate(seq) if s == c]:
+                ax.text(col, -row, str(k + 1), ha="center", va="center", fontsize=6.5, color=C["nominal"], fontweight="bold")
+    ax.set_xlim(-0.6, 31.6)
+    ax.set_ylim(-7.6, 0.6)
+    ax.set_aspect("equal")
+    ax.axis("off")
+    ax.set_title(f"The complete bank: all {len(pats)} wirings of a ring of 8 (springs drawn where live).\nBlue, numbered: "
+                 f"the {len(seq)} wirings of the example run, in order", fontsize=11.5)
+    return fig
+
+
+def e7_timeline(run: dict, world: W.World, every: int):
+    a = run["arrays"]
+    pi, seq = a["pi"], a["seq"]
+    T = len(pi)
+    t = np.arange(T) * world.dt
+    fig, (a1, a2) = plt.subplots(2, 1, figsize=(11, 5.2), gridspec_kw={"height_ratios": [3, 1.3]}, sharex=True)
+    a1.step(t + world.dt, pi.argmax(1), where="post", color=C["nominal"], lw=6, alpha=0.45,
+            label="most believed wiring (binding vertex)")
+    a1.step(t, np.repeat(seq, every)[:T], where="post", color=C["out"], lw=1.2, label="actual wiring")
+    a1.set_ylabel("wiring (row of the bank)")
+    a1.set_ylim(-8, pi.shape[1] + 8)
+    a1.set_title("Out of 256 possible wirings, the binding vertex settles on the actual one within a few steps of each "
+                 "rewiring")
+    a1.legend(loc="upper left", fontsize=9)
+    a1.grid(False)
+    names = ["recall", "detect-20", "detect-50", "stale"]
+    truth = np.repeat(seq, every)[:T]
+    for i, name in enumerate(names):
+        th = a[f"gates_nom_{name}"]  # wiring behind the nominal world, shifted by the horizon
+        est = np.array([int((g > 0.5) @ (1 << np.arange(8))) for g in th])
+        right = est[20:20 + T - 20] == truth[:T - 20]  # wiring chosen at t (shown at t + 20) against the actual one at t
+        a2.scatter(t[:T - 20][~right], np.full((~right).sum(), i), marker="|", s=40, color=E7_STYLE[name][0], lw=1)
+    a2.set_yticks(range(len(names)), [E7_STYLE[n][2] for n in names], fontsize=9)
+    a2.set_ylim(-0.6, len(names) - 0.4)
+    a2.invert_yaxis()
+    a2.set_xlabel("time (s)")
+    a2.set_title("Marks: steps on which each method predicts with the wrong wiring", fontsize=10.5)
+    a2.grid(axis="y", visible=False)
+    for s in range(every, T, every):
+        for ax in (a1, a2):
+            ax.axvline(s * world.dt, color=C["muted"], lw=0.6, ls=":")
+    return fig
+
+
+def e7_event(runs: list[dict]):
+    offs = runs[0]["arrays"]["aligned_offsets"]
+    fig, (a1, a2) = plt.subplots(1, 2, figsize=(11, 3.7), gridspec_kw={"width_ratios": [1.6, 1]})
+    for name in ("recall", "detect-20", "detect-50", "stale"):
+        col, ls, lab = E7_STYLE[name]
+        v = np.mean([r["arrays"][f"aligned_correct_{name}"] for r in runs], 0)
+        a1.plot(offs, 100 * v, color=col, ls=ls, label=lab, lw=1.8)
+    a1.axvline(0, color=C["muted"], lw=0.8, ls=":")
+    a1.text(-0.4, 50, "rewired", color=C["muted"], fontsize=9, ha="right")
+    a1.set(xlabel="steps since the rewiring (0.05 s each)", ylabel="right wiring in force (%)", ylim=(-3, 103),
+           title="After a rewiring: how fast each method catches up")
+    a1.legend(loc="center right", fontsize=9)
+    ev = [e for r in runs for e in r["metrics"]["events"]]
+    data, labels, cols = [], [], []
+    for name in ("recall", "detect-20", "detect-50"):
+        vals = [e[f"relock_{name}"] for e in ev if e[f"relock_{name}"] is not None]
+        data.append(vals)
+        labels.append(E7_STYLE[name][2].replace("detection, ", "detect, ").replace("binding vertex (recall)", "recall"))
+        cols.append(E7_STYLE[name][0])
+    bp = a2.boxplot(data, vert=False, widths=0.55, patch_artist=True, showfliers=False)
+    for patch, col in zip(bp["boxes"], cols):
+        patch.set(facecolor=col, alpha=0.25, edgecolor=col)
+    for med, col in zip(bp["medians"], cols):
+        med.set(color=col, lw=2)
+    for i, (vals, col) in enumerate(zip(data, cols)):
+        a2.text(max(vals) * 1.02 if vals else 1, i + 1, f"median {np.median(vals):g}", va="center", fontsize=9, color=col)
+    a2.set_yticks(range(1, len(data) + 1), labels, fontsize=9)
+    a2.set_xscale("log")
+    a2.set_xlim(0.8, 120)
+    a2.invert_yaxis()
+    a2.set(xlabel="steps of new data until right", title="Re-lock times, all seeds")
+    a2.grid(axis="y", visible=False)
+    return fig
+
+
+def e7_deviation(run: dict, runs: list[dict], world: W.World, every: int, horizon: int):
+    a = run["arrays"]
+    fig, (a1, a2) = plt.subplots(1, 2, figsize=(11, 3.7), gridspec_kw={"width_ratios": [1.7, 1]})
+    T = len(a["dev_example_known"])
+    t = (np.arange(T) + horizon) * world.dt
+    for name in ("detect-20", "recall", "known"):
+        col, ls, lab = E7_STYLE[name]
+        a1.semilogy(t, a[f"dev_example_{name}"], color=col, ls=ls, lw=1.3 if name != "known" else 1.6, label=lab)
+    for s in range(every, T + horizon, every):
+        a1.axvline(s * world.dt, color=C["muted"], lw=0.6, ls=":")
+    a1.set(xlabel="time predicted (s)", ylabel="relative deviation",
+           title=f"Example run: deviation of the world predicted {horizon * world.dt:g} s ahead")
+    offs = runs[0]["arrays"]["aligned_offsets"]
+    for name in ("stale", "detect-20", "recall"):
+        col, ls, lab = E7_STYLE[name]
+        v = np.mean([r["arrays"][f"aligned_dev_{name}"] for r in runs], 0)
+        a2.plot(offs, v, color=col, ls=ls, label=lab)
+    a2.axhline(1, color=C["actual"], lw=1)
+    a2.axhline(1.5, color=C["in"], ls="--", lw=1)
+    a2.text(offs[-1], 1.52, "1.5×", color=C["in"], ha="right", va="bottom", fontsize=9)
+    a2.axvline(0, color=C["muted"], lw=0.8, ls=":")
+    a2.set_yscale("log")
+    a2.set(xlabel="steps since the rewiring (prediction made then)", ylabel="÷ deviation with known gates",
+           title="Around a rewiring, all seeds")
+    handles = [plt.Line2D([], [], color=E7_STYLE[k][0], ls=E7_STYLE[k][1], lw=1.8, label=E7_STYLE[k][2])
+               for k in ("known", "recall", "detect-20", "stale")]
+    fig.legend(handles=handles, loc="outside lower center", ncol=4, fontsize=9.5)
+    return fig
+
+
+def e7_visibility(runs: list[dict]):
+    ev = [e for r in runs for e in r["metrics"]["events"]]
+    s = np.array([e["stretch"] for e in ev])
+    fig, ax = plt.subplots(figsize=(11, 3.4))
+    for name, dy in (("recall", 0.0), ("detect-20", 0.0)):
+        col, _, lab = E7_STYLE[name]
+        rl = np.array([e[f"relock_{name}"] if e[f"relock_{name}"] is not None else np.nan for e in ev], float)
+        jit = np.random.default_rng(0).uniform(-0.15, 0.15, len(rl))
+        ax.scatter(s, rl + jit, s=10, color=col, alpha=0.45, lw=0, label=lab)
+        bins = np.geomspace(s.min(), s.max(), 9)
+        mid, med = [], []
+        for lo, hi in zip(bins[:-1], bins[1:]):
+            sel = (s >= lo) & (s < hi) & np.isfinite(rl)
+            if sel.sum() >= 5:
+                mid.append(np.sqrt(lo * hi))
+                med.append(np.median(rl[sel]))
+        ax.plot(mid, med, color=col, lw=2.2)
+    ax.set_xscale("log")
+    ax.set_yscale("log")
+    ax.set(xlabel="stretch of the springs that changed, just after the rewiring (rad², summed)",
+           ylabel="steps until right",
+           title="A barely stretched spring is barely visible: re-locking slows as the changed springs' stretch falls")
+    ax.legend(loc="lower left", title="dots: rewirings; lines: medians", fontsize=9, title_fontsize=9)
+    return fig
+
+
+def e7_sweep(runs: list[dict]):
+    sw = [r["metrics"]["sweep"] for r in runs]
+    kinds = sorted({c["kind"] for c in sw[0]}, key=["pattern", "toggle"].index)
+    noises = sorted({c["noise"] for c in sw[0]})
+    evs = sorted({c["every"] for c in sw[0]})
+    rows = [(k, nz) for k in kinds for nz in noises]
+    methods = ("recall", "recall-flip", "detect-20")
+    fig, axes = plt.subplots(1, len(methods), figsize=(11, 3.4), sharey=True)
+    cmap = LinearSegmentedColormap.from_list("q", ["#FFFFFF", C["nominal"]])
+    for ax, mth in zip(axes, methods):
+        Z = np.array([[np.mean([next(c for c in s if c["kind"] == k and c["noise"] == nz and c["every"] == ev)["correct"][mth]
+                                for s in sw]) for ev in evs] for k, nz in rows])
+        ax.imshow(Z, cmap=cmap, vmin=0, vmax=1, aspect="auto")
+        for i in range(Z.shape[0]):
+            for j in range(Z.shape[1]):
+                ax.text(j, i, f"{100 * Z[i, j]:.0f}%", ha="center", va="center", fontsize=10,
+                        color="white" if Z[i, j] > 0.6 else C["actual"])
+        ax.set_xticks(range(len(evs)), [f"every {ev * 0.05:g} s" for ev in evs], fontsize=9)
+        ax.set_title(E7_STYLE[mth][2], fontsize=10.5)
+        ax.grid(False)
+        ax.tick_params(length=0)
+        for sp in ax.spines.values():
+            sp.set_visible(False)
+    axes[0].set_yticks(range(len(rows)), [f"{'whole wiring' if k == 'pattern' else 'one spring'}, {viz.pct(nz)} noise"
+                                          for k, nz in rows], fontsize=9)
+    fig.suptitle("Right wiring in force, by how often and how the wiring changes, and by noise", x=0.01, ha="left",
+                 fontsize=13, fontweight="bold")
     return fig

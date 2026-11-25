@@ -49,14 +49,31 @@ def residual_scale(X: np.ndarray, P: np.ndarray, d: int = 1) -> np.ndarray:
     return np.tile(s, X.shape[-1] // (2 * d))
 
 
-class BindingVertex:
-    """Belief over the bank's stored structures, filtered step by step."""
+def uniform_transitions(C: int, hazard: float) -> np.ndarray:
+    """Stay with probability 1 - h; otherwise jump to any other stored structure, all equally likely."""
+    return (1 - hazard) * np.eye(C) + hazard / max(C - 1, 1) * (1 - np.eye(C))
 
-    def __init__(self, bank: ContextBank, model: OneHop, scale: np.ndarray, hazard: float = 0.01):
+
+def flip_transitions(patterns: np.ndarray, hazard: float) -> np.ndarray:
+    """Stay with probability 1 - h; otherwise flip exactly one spring (structures one gate apart, all equally likely)."""
+    G = np.asarray(patterns) > 0.5
+    one_apart = (G[:, None, :] != G[None, :, :]).sum(-1) == 1
+    T = one_apart / np.maximum(one_apart.sum(1, keepdims=True), 1) * hazard
+    return T + (1 - hazard) * np.eye(len(G))
+
+
+class BindingVertex:
+    """Belief over the bank's stored structures, filtered step by step.
+
+    `transitions` is the prior over how structures change, T[c, c'] = P(c' next | c now); the default is uniform jumps.
+    """
+
+    def __init__(self, bank: ContextBank, model: OneHop, scale: np.ndarray, hazard: float = 0.01,
+                 transitions: np.ndarray | None = None):
         self.bank, self.model, self.scale, self.hazard = bank, model, np.asarray(scale), hazard
         self.P = np.array([model.assemble(L) for L in bank.laplacians()])
         C = len(self.P)
-        self.T = (1 - hazard) * np.eye(C) + hazard / max(C - 1, 1) * (1 - np.eye(C))
+        self.T = uniform_transitions(C, hazard) if transitions is None else np.asarray(transitions)
 
     def nll_steps(self, X: np.ndarray) -> np.ndarray:
         """Per-step negative log-likelihood (up to a constant) of each stored context. X: (T + 1, N) -> (T, C)."""

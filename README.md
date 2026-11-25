@@ -18,7 +18,7 @@ studies/01-multibody/     step 1: pendulums on springs
     results/              per experiment and seed: metrics.json, arrays.npz, meta.json (code version, time, versions)
     figures.py            the study's figures
     build_notebooks.py    builds, executes and exports the presentation notebooks
-    notebooks/            e0_calibrate ... e6_recall, executed
+    notebooks/            e0_calibrate ... e7_capstone, executed
 ```
 
 ## Running
@@ -28,7 +28,7 @@ pip install -e ".[notebooks,dev]"
 python -m pytest                                    # the closed forms, fitting, detection and recall
 cd studies/01-multibody
 python experiments/run_all.py                       # every experiment and seed (or a subset: run_all.py e2 e5)
-python build_notebooks.py --execute --html          # build, run and export the seven notebooks
+python build_notebooks.py --execute --html          # build, run and export the eight notebooks
 python ../../tools/build_math_notebook.py --html    # rebuild the math walkthrough after changing the library
 ```
 

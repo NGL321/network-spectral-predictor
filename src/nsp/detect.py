@@ -61,3 +61,30 @@ def design_singular_values(X: np.ndarray, model: OneHop, pairs: list[Edge], n: i
     G, _ = design(X, model, pairs, n, d)
     s = np.linalg.svd(G, compute_uv=False)
     return s / s[0]
+
+
+def design_steps(X: np.ndarray, model: OneHop, pairs: list[Edge], n: int, d: int = 1):
+    """Per-step design blocks and residuals for one trajectory X of shape (T + 1, n * 2d).
+
+    Returns G of shape (T, n * 2d, m) and r of shape (T, n * 2d): stacking steps a..b gives the design and residual
+    of the window a..b, so a sliding detector builds each step once.
+    """
+    D = 2 * d
+    xs, ys = X[:-1].reshape(-1, n, D), X[1:].reshape(-1, n, D)
+    r = ys - xs @ model.K.T
+    G = np.zeros((len(xs), n, D, len(pairs)))
+    for k, (a, b) in enumerate(pairs):
+        dv = (xs[:, b] - xs[:, a]) @ model.M.T
+        G[:, b, :, k], G[:, a, :, k] = -dv, dv
+    return G.reshape(len(xs), n * D, len(pairs)), r.reshape(len(xs), n * D)
+
+
+def sliding_gates(G: np.ndarray, r: np.ndarray, window: int, method: str = "nnls") -> np.ndarray:
+    """Gate estimate after each step t from the window of the last `window` steps ending at t. Returns (T, m)."""
+    T, _, m = G.shape
+    out = np.empty((T, m))
+    for t in range(T):
+        a = max(0, t + 1 - window)
+        A, b = G[a:t + 1].reshape(-1, m), r[a:t + 1].reshape(-1)
+        out[t] = nnls(A, b)[0] if method == "nnls" else np.linalg.lstsq(A, b, rcond=None)[0]
+    return out

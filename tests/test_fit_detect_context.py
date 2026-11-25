@@ -82,3 +82,23 @@ def test_recall_and_relock():
                                             W.initial_states(WORLD, n, 1, 0.1, rng)), 0.01, 0.1, rng)[0]
     pi = bv.filter(X)
     assert np.argmax(pi[90]) == 1 and np.argmax(pi[130]) == 4
+
+
+def test_design_steps_stack_into_the_window_design():
+    n, ring, pairs = 5, graphs.ring(5), graphs.complete(5)
+    L = graphs.laplacian(n, ring, [1, 0, 1, 1, 0])
+    m = model.series(WORLD)
+    X = W.simulate_exact(WORLD, [(60, L)], W.initial_states(WORLD, n, 1, 0.1, np.random.default_rng(2)))
+    G, r = detect.design(X, m, pairs, n)
+    Gs, rs = detect.design_steps(X[0], m, pairs, n)
+    assert np.allclose(Gs.reshape(-1, len(pairs)), G) and np.allclose(rs.reshape(-1), r)
+    g = detect.sliding_gates(Gs, rs, 20)
+    assert detect.exact_match(g[-1], detect.truth_vector(pairs, ring, [1, 0, 1, 1, 0]))
+
+
+def test_transition_priors():
+    pats = graphs.all_gate_patterns(8)
+    for T in (context.uniform_transitions(len(pats), 0.02), context.flip_transitions(pats, 0.02)):
+        assert np.allclose(T.sum(1), 1) and np.allclose(np.diag(T), 0.98)
+    F = context.flip_transitions(pats, 0.02)
+    assert np.all((F > 0).sum(1) == 9)  # stay, or flip one of the 8 springs

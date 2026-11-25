@@ -108,6 +108,8 @@ TEST_NOTES = {
     "test_kronecker_fit_two_angles": "the two-angle fit is the planar fit ⊗ I₂ (Part 11)",
     "test_detection_one_spring_needs_two_trajectories_or_nnls": "the blind spot exists with one trajectory; NNLS or three trajectories close it (Part 9)",
     "test_recall_and_relock": "the binding vertex recalls a stored structure and re-locks after a switch (Part 10)",
+    "test_design_steps_stack_into_the_window_design": "per-step detection blocks stack into the window's design (Part 9, E7)",
+    "test_transition_priors": "the uniform and one-flip priors over wiring changes are proper transition matrices (Part 10)",
 }
 
 
@@ -626,6 +628,8 @@ $$\ell_c(t+1)=\exp\!\Big(-\tfrac12\big\|x(t+1)-P(G_c)\,x(t)\big\|^2_{\Sigma^{-1}
 
 Here $h$ is the hazard (the chance per step that the wiring changes) and $\Sigma$ the diagonal covariance of one-step residuals, measured on a stretch with known gates. This is the forward pass of a hidden Markov model (Rabiner, *Proc. IEEE* 1989), the same machinery as the COIN model of motor memory (Heald, Lengyel & Wolpert, *Nature* 2021), and the minimal form of the Tolman-Eichenbaum-style binding proposed for the end of step 1 (Whittington et al., *Cell* 2020): binding a context to stored structure, without yet learning the structure itself. Unnormalised, it is a linear predictor $T^\top$ whose output is gated element by element by evidence: the same algebra as a gated edge of the network, which is why it can live as one more vertex.
 
+The persistence matrix is a prior over how wirings change. The default spreads $h$ evenly over every other stored wiring; E7 also tries one that expects a single spring to flip, spreading $h$ over the wirings one gate away. It helps when changes really are single flips and hurts when whole patterns change, so the right $T$ depends on the world.
+
 **Recall** over a window picks $\hat c=\arg\min_c\sum_t\mathrm{NLL}_c(t)$, with $\mathrm{NLL}_c=-\log\ell_c$.
 
 **Is this wiring new?** Compare the best stored wiring with one detected (Part 9) on the same window:
@@ -634,7 +638,7 @@ $$\Lambda=\min_c\sum_t\mathrm{NLL}_c(t)-\sum_t\mathrm{NLL}_{\hat g}(t)\;>\;\tau\
 
 with $\tau$ set so that 1% of windows from stored wirings exceed it. Both terms carry the same noise energy (about $\tfrac12$ per coordinate per step), so the difference cancels it; an absolute test on $\min_c\sum_t\mathrm{NLL}_c$ alone has to set its threshold above that noise.
 
-""" + code("context", "ContextBank", "residual_scale", "BindingVertex")))
+""" + code("context", "ContextBank", "residual_scale", "uniform_transitions", "flip_transitions", "BindingVertex")))
     out[-1]["attachments"] = {"binding.png": {"image/png": fig_binding()}}
 
     # ---- Part 11
