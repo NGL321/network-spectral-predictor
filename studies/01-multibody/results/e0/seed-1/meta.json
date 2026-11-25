@@ -1,0 +1,33 @@
+{
+ "code": "fb79448",
+ "time_utc": "2026-11-25T20:28:46+00:00",
+ "python": "3.13.18",
+ "numpy": "2.5.3",
+ "scipy": "1.18.1",
+ "config": {
+  "world": {
+   "omega0": 2.0,
+   "kappa": 1.0,
+   "dt": 0.05,
+   "d": 1
+  },
+  "run": {
+   "seeds": [
+    0,
+    1,
+    2
+   ]
+  },
+  "e0": {
+   "graph": "path",
+   "n": 3,
+   "amplitude": 0.1,
+   "large_amplitude": 2.0,
+   "samples": 2000,
+   "substeps": 50,
+   "reference_substeps": 200,
+   "trajectories": 4,
+   "player_steps": 400
+  }
+ }
+}
