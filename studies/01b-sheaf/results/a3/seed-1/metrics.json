@@ -1,0 +1,58 @@
+{
+ "zero_modes_match_modes_at_omega0": 1.0,
+ "by_chords": {
+  "0": {
+   "springs": 8.0,
+   "zero_modes": 8.0,
+   "mechanisms": 5.0
+  },
+  "3": {
+   "springs": 11.0,
+   "zero_modes": 5.1,
+   "mechanisms": 2.1
+  },
+  "5": {
+   "springs": 13.0,
+   "zero_modes": 3.4,
+   "mechanisms": 0.4
+  }
+ },
+ "detection": {
+  "random_20": {
+   "auroc": 0.9979768270944741,
+   "exact": 0.7666666666666667,
+   "live_missed_per_layout": 0.1,
+   "spurious_max": 1.124445933631467
+  },
+  "random_50": {
+   "auroc": 1.0,
+   "exact": 1.0,
+   "live_missed_per_layout": 0.0,
+   "spurious_max": 0.21721775859759673
+  },
+  "floppy_20": {
+   "auroc": 0.6470580379587733,
+   "exact": 0.0,
+   "live_missed_per_layout": 6.466666666666667,
+   "spurious_max": 9.18819263843669
+  },
+  "floppy_50": {
+   "auroc": 0.7392904583161937,
+   "exact": 0.03333333333333333,
+   "live_missed_per_layout": 5.3,
+   "spurious_max": 3.175811007520801
+  },
+  "rigid_20": {
+   "auroc": 0.5119765385758033,
+   "exact": 0.0,
+   "live_missed_per_layout": 7.3,
+   "spurious_max": 27.188564995481578
+  },
+  "rigid_50": {
+   "auroc": 0.5163787907354084,
+   "exact": 0.0,
+   "live_missed_per_layout": 7.833333333333333,
+   "spurious_max": 12.179681483227947
+  }
+ }
+}

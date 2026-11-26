@@ -1,0 +1,69 @@
+{
+ "identity_max_abs": 5.551115123125783e-17,
+ "transfer": {
+  "planar_maps_on_3d": {
+   "20": 0.00012091089664652053,
+   "200": 0.0013350899977314632
+  },
+  "planar_maps_on_planar": {
+   "20": 0.00011655546147156253,
+   "200": 0.0012444182401093091
+  },
+  "3d_from_scratch": {
+   "20": 0.00011920445095272905,
+   "200": 0.0013170610273061428
+  }
+ },
+ "scratch_K_vs_K0": 2.9137837297160685e-05,
+ "scratch_cross_direction_max": 1.856590099082746e-06,
+ "data_cost": [
+  {
+   "steps": 20,
+   "trajectories": 1,
+   "noise": 0.001,
+   "kronecker": 0.0076260103110372835,
+   "unconstrained": 0.016721987638681542,
+   "global": 7849208.473450178
+  },
+  {
+   "steps": 20,
+   "trajectories": 1,
+   "noise": 0.01,
+   "kronecker": 0.06459825753394442,
+   "unconstrained": 0.17430100732916165,
+   "global": 9158165.149569424
+  },
+  {
+   "steps": 50,
+   "trajectories": 2,
+   "noise": 0.001,
+   "kronecker": 0.002006567484411984,
+   "unconstrained": 0.002948677598487317,
+   "global": 1.070253530291714
+  },
+  {
+   "steps": 50,
+   "trajectories": 2,
+   "noise": 0.01,
+   "kronecker": 0.03265238290427455,
+   "unconstrained": 0.04577805766042874,
+   "global": 1.2211393714620093
+  },
+  {
+   "steps": 200,
+   "trajectories": 10,
+   "noise": 0.001,
+   "kronecker": 0.0012370803690502812,
+   "unconstrained": 0.0012878859193732137,
+   "global": 0.003722866329113191
+  },
+  {
+   "steps": 200,
+   "trajectories": 10,
+   "noise": 0.01,
+   "kronecker": 0.022063560160492608,
+   "unconstrained": 0.023103468720320933,
+   "global": 0.09382738374945261
+  }
+ ]
+}

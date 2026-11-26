@@ -1,0 +1,53 @@
+{
+ "code": "2a287e7",
+ "time_utc": "2026-11-26T01:33:37+00:00",
+ "python": "3.13.18",
+ "numpy": "2.5.3",
+ "scipy": "1.18.1",
+ "config": {
+  "world": {
+   "omega0": 2.0,
+   "kappa": 1.0,
+   "dt": 0.05,
+   "d": 2
+  },
+  "run": {
+   "seeds": [
+    0,
+    1,
+    2
+   ]
+  },
+  "a2": {
+   "amplitude": 0.1,
+   "box": 2.0,
+   "train_sizes": [
+    3,
+    5
+   ],
+   "train_chords": [
+    0,
+    1
+   ],
+   "train_layouts": 2,
+   "train_min_sep": 0.45,
+   "train_trajectories": 10,
+   "train_steps": 200,
+   "test_n": 8,
+   "test_chords": 3,
+   "test_layouts": 3,
+   "test_min_sep": 0.35,
+   "test_trajectories": 10,
+   "own_trajectories": 10,
+   "steps": 200,
+   "horizons": [
+    20,
+    200
+   ],
+   "planar_graphs": [
+    "path",
+    "ring"
+   ]
+  }
+ }
+}

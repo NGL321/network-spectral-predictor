@@ -1,0 +1,79 @@
+{
+ "code": "2a287e7",
+ "time_utc": "2026-11-26T01:34:16+00:00",
+ "python": "3.13.18",
+ "numpy": "2.5.3",
+ "scipy": "1.18.1",
+ "config": {
+  "world": {
+   "omega0": 2.0,
+   "kappa": 1.0,
+   "dt": 0.05,
+   "d": 2
+  },
+  "run": {
+   "seeds": [
+    0,
+    1,
+    2
+   ]
+  },
+  "a4": {
+   "amplitudes": [
+    0.1,
+    0.3,
+    0.5
+   ],
+   "box": 3.0,
+   "min_sep": 0.9,
+   "train_sizes": [
+    3,
+    5
+   ],
+   "train_chords": [
+    0,
+    1
+   ],
+   "train_layouts": 2,
+   "train_trajectories": 10,
+   "train_steps": 200,
+   "test_n": 8,
+   "test_chords": 3,
+   "test_layouts": 3,
+   "test_trajectories": 10,
+   "steps": 200,
+   "horizons": [
+    20,
+    200
+   ],
+   "substeps": 50,
+   "floor_noise": 0.001,
+   "precession": [
+    [
+     0.1,
+     0.05
+    ],
+    [
+     0.2,
+     0.1
+    ],
+    [
+     0.3,
+     0.15
+    ],
+    [
+     0.3,
+     0.075
+    ]
+   ],
+   "precession_steps": 4000,
+   "lone_amplitudes": [
+    0.1,
+    0.3,
+    0.6
+   ],
+   "lone_train": 20,
+   "lone_test": 10
+  }
+ }
+}

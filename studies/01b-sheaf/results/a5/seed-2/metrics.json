@@ -1,0 +1,69 @@
+{
+ "pattern": {
+  "right_wiring": {
+   "known": 1.0,
+   "stale": 0.08333333333333333,
+   "recall": 0.9124166666666667,
+   "detect-20": 0.7138333333333333,
+   "detect-50": 0.3899166666666667
+  },
+  "relock_median": {
+   "recall": 3.0,
+   "detect-20": 16.0,
+   "detect-50": 33.0
+  },
+  "relock_never": {
+   "recall": 0,
+   "detect-20": 0,
+   "detect-50": 0
+  },
+  "ahead_deviation": {
+   "known": 0.05405514232700638,
+   "stale": 0.18851681523864183,
+   "recall": 0.06243272347958579,
+   "detect-20": 0.09830172292945726,
+   "detect-50": 0.14745988962774184
+  },
+  "ahead_ratio_to_known": {
+   "known": 1.0,
+   "stale": 3.487490868088184,
+   "recall": 1.1549821310597845,
+   "detect-20": 1.8185452613329802,
+   "detect-50": 2.7279530360993927
+  }
+ },
+ "toggle": {
+  "right_wiring": {
+   "known": 1.0,
+   "stale": 0.09583333333333334,
+   "recall": 0.8645,
+   "detect-20": 0.7933333333333333,
+   "detect-50": 0.5405833333333333
+  },
+  "relock_median": {
+   "recall": 5.0,
+   "detect-20": 11.0,
+   "detect-50": 25.0
+  },
+  "relock_never": {
+   "recall": 0,
+   "detect-20": 0,
+   "detect-50": 0
+  },
+  "ahead_deviation": {
+   "known": 0.02769757725984739,
+   "stale": 0.16373941569249836,
+   "recall": 0.03652418074355882,
+   "detect-20": 0.045797465968314986,
+   "detect-50": 0.06614990407226426
+  },
+  "ahead_ratio_to_known": {
+   "known": 1.0,
+   "stale": 5.91168729872515,
+   "recall": 1.3186778179515064,
+   "detect-20": 1.6534827410593285,
+   "detect-50": 2.3882920679911024
+  }
+ },
+ "zero_modes_all_on": 8
+}
