@@ -35,10 +35,17 @@ def features(xv: np.ndarray, kind: str) -> np.ndarray:
     raise ValueError(f"unknown lift {kind!r}")
 
 
-def invariant_features(xv: np.ndarray) -> np.ndarray:
-    """Rotation-invariant cubic lift for two tilts (d = 2, stage 1.5). xv: (N, 4) rows of (q, q')."""
+def invariant_features(xv: np.ndarray, order: int = 3) -> np.ndarray:
+    """Rotation-equivariant lift for two tilts (d = 2, stage 1.5). xv: (N, 4) rows of (q, q').
+
+    q and q' times every invariant up to the given order: 1; |q|^2, |q'|^2, q.q' (cubic, 16 numbers); and their six
+    pairwise products (quintic, 28 numbers). Equivariant: rotating the input rotates the features the same way.
+    """
     q, v = xv[:, :2], xv[:, 2:]
     qq = (q**2).sum(1, keepdims=True)
     vv = (v**2).sum(1, keepdims=True)
     qv = (q * v).sum(1, keepdims=True)
-    return np.hstack([xv, q * qq, q * vv, q * qv, v * qq, v * vv, v * qv])
+    inv = [qq, vv, qv]
+    if order >= 5:
+        inv += [qq * qq, vv * vv, qv * qv, qq * vv, qq * qv, vv * qv]
+    return np.hstack([xv] + [q * s for s in inv] + [v * s for s in inv])

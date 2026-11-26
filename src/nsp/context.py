@@ -66,12 +66,14 @@ class BindingVertex:
     """Belief over the bank's stored structures, filtered step by step.
 
     `transitions` is the prior over how structures change, T[c, c'] = P(c' next | c now); the default is uniform jumps.
+    `steps` gives each stored structure's whole-network step directly (stage 1.5: the sheaf model's, which `model`
+    cannot assemble from a Laplacian); by default they are model.assemble(L_c).
     """
 
     def __init__(self, bank: ContextBank, model: OneHop, scale: np.ndarray, hazard: float = 0.01,
-                 transitions: np.ndarray | None = None):
+                 transitions: np.ndarray | None = None, steps: np.ndarray | None = None):
         self.bank, self.model, self.scale, self.hazard = bank, model, np.asarray(scale), hazard
-        self.P = np.array([model.assemble(L) for L in bank.laplacians()])
+        self.P = np.asarray(steps) if steps is not None else np.array([model.assemble(L) for L in bank.laplacians()])
         C = len(self.P)
         self.T = uniform_transitions(C, hazard) if transitions is None else np.asarray(transitions)
 

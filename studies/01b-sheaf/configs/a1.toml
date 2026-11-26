@@ -1,0 +1,21 @@
+[world]
+omega0 = 2.0   # lone pendulum frequency, rad/s
+kappa = 1.0    # spring stiffness / inertia, 1/s^2
+dt = 0.05      # sampling step, s
+d = 2          # position coordinates per body (2 = spherical: two tilts)
+
+[run]
+seeds = [0, 1, 2]
+
+[a1]
+n = 8                          # test: a ring of 8
+amplitude = 0.1                # tilt scale, rod lengths (about 6 degrees)
+steps = 200                    # 10 s rollouts
+trajectories = 10              # test trajectories
+horizons = [20, 200]           # 1 s and 10 s
+train_sizes = [3, 5]           # step 1's maps are learned on these body counts (as in E2)
+train_graphs = ["path", "ring"]
+train_trajectories = 10
+train_steps = 200
+data_cost = [[20, 1], [50, 2], [200, 10]]   # (steps, trajectories) of ring-8 data for the data-cost comparison
+noise_levels = [0.001, 0.01]   # measurement noise, fraction of the swing (rates: of omega0 x swing)

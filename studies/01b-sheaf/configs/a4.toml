@@ -1,0 +1,31 @@
+[world]
+omega0 = 2.0   # lone pendulum frequency, rad/s
+kappa = 1.0    # spring stiffness / inertia, 1/s^2
+dt = 0.05      # sampling step, s
+d = 2          # position coordinates per body (2 = spherical: two tilts)
+
+[run]
+seeds = [0, 1, 2]
+
+[a4]
+amplitudes = [0.1, 0.3, 0.5]   # tilt scale, rod lengths (0.5 is about 30 degrees)
+box = 3.0                      # pivots further apart than in A2, so bobs swinging 0.5 rod lengths do not meet
+min_sep = 0.9
+train_sizes = [3, 5]
+train_chords = [0, 1]
+train_layouts = 2
+train_trajectories = 10
+train_steps = 200
+test_n = 8
+test_chords = 3
+test_layouts = 3
+test_trajectories = 10
+steps = 200                    # 10 s rollouts
+horizons = [20, 200]
+substeps = 50                  # RATTLE substeps per sample
+floor_noise = 0.001            # the chaos floor: the world restarted this far off (fraction of the swing)
+precession = [[0.1, 0.05], [0.2, 0.1], [0.3, 0.15], [0.3, 0.075]]   # lone pendulum: tilt a and sideways rate b x omega0
+precession_steps = 4000        # 200 s
+lone_amplitudes = [0.1, 0.3, 0.6]
+lone_train = 20                # lone-pendulum runs for fitting each lift
+lone_test = 10

@@ -8,7 +8,8 @@ The goal of this project is to create a fully linear network approach to solving
 ## Layout
 
 ```
-src/nsp/                  the library: graphs, world, model, fit, lifts, detect, context, metrics, viz, results, config
+src/nsp/                  the library: graphs, world, model, fit, lifts, detect, context, metrics, viz, results, config,
+                          sheaf and sphere (stage 1.5), sense (step 2), study
 tests/                    what the code is held to (pytest)
 tools/build_math_notebook.py   builds notebooks/00_math_walkthrough.ipynb from the library
 notebooks/                00_math_walkthrough.ipynb: the math, next to the library's own code (runs no Python)
@@ -19,6 +20,8 @@ studies/01-multibody/     step 1: pendulums on springs
     figures.py            the study's figures
     build_notebooks.py    builds, executes and exports the presentation notebooks
     notebooks/            e0_calibrate ... e7_capstone, executed
+studies/01b-sheaf/        stage 1.5, part A: spherical pendulums whose springs each lie along their own axis (a sheaf)
+    configs/, experiments/, results/   A1 to A6
 studies/02-hidden/        step 2: hidden information; only angles are measured, each body's sense is clamped
     configs/, experiments/, results/, figures.py, build_notebooks.py
     notebooks/            h1_clamped, executed
@@ -37,6 +40,8 @@ python build_notebooks.py --execute --html          # build, run and export the 
 python ../../tools/build_math_notebook.py --html    # rebuild the math walkthrough after changing the library
 cd ../02-hidden
 python experiments/run_all.py && python build_notebooks.py --execute --html
+cd ../01b-sheaf
+python experiments/run_all.py                       # A1 to A6, three seeds each (about 3 minutes)
 ```
 
 A notebook whose results are missing runs its experiment first, so `build_notebooks.py --execute` also works from a clean checkout.
@@ -57,3 +62,9 @@ Metrology terms, inverted on purpose: **actual** is the generated world (determi
 - One notebook per experiment rather than one per rung.
 - Gate detection defaults to non-negative least squares: plain least squares has an exact blind spot when several identical pendulums hang free and the data is one trajectory (derived in Part 9 of the math walkthrough, measured in E5).
 - E6 decides whether a structure is new with a likelihood ratio against a freshly detected structure, not an absolute fit threshold, which flagged too few new structures.
+
+## Notes on stage 1.5, part A
+
+- The spherical world for small swings is exact (`sheaf.simulate_exact`); for swings of any size it is RATTLE, velocity Verlet with the rods' constraint solved exactly (`sphere.simulate`).
+- A spring at its natural length is nonlinear at first order in swing / spacing (a sideways offset stretches it quadratically), while a pendulum's own nonlinearity is third order. So at large swings the springs are read from the current geometry, projected on each bob's sphere (`sphere.spring_reads`), and the body map is lifted with a rotation-equivariant quintic (`lifts.invariant_features(order=5)`); per-direction lifts cannot make a spherical pendulum's precession.
+- `context.BindingVertex` takes each stored wiring's step directly (`steps=`), so the binding vertex works with the sheaf model's steps.
